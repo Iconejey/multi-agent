@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Multi-agent disease simulation</title>
+
+		<link rel="stylesheet" href="./styles/css/main.css" />
+
+		<script src="./src/agent.js" defer async></script>
+		<script src="./src/main.js" defer async></script>
+	</head>
+	<body>
+		<section class="top">
+			<span id="fps"></span>
+
+			<div class="game"></div>
+
+			<div class="params">
+				<div class="param color-healthy">
+					<input id="healthy" type="number" min="0" value="100" />
+					<label>Healthy</label>
+				</div>
+
+				<div class="param color-infected">
+					<input id="infected" type="number" min="0" value="2" />
+					<label>Infected</label>
+				</div>
+
+				<div class="param color-vaccinated">
+					<input id="vaccinated" type="number" min="0" value="100" />
+					<label>Vaccinated</label>
+				</div>
+
+				<div class="param color-cured">
+					<input id="cured" type="number" min="0" value="0" />
+					<label>Cured</label>
+				</div>
+
+				<div class="param color-dead">
+					<input id="dead" type="number" min="0" value="0" />
+					<label>Dead</label>
+				</div>
+
+				<a id="start" class="btn" tabindex="1">Start</a>
+				<a id="stop" class="btn" tabindex="2">Stop</a>
+				<a id="keep" class="btn" tabindex="3">Keep graph</a>
+				<a id="crop" class="btn" tabindex="3">Crop graph</a>
+			</div>
+
+			<div class="params">
+				<div class="param">
+					<input id="contamination" type="number" min="0" max="100" value="50" />
+					<label>Contamination</label>
+				</div>
+
+				<div class="param">
+					<input id="infection_time" type="number" min="1" max="100" value="20" />
+					<label>Infected time</label>
+				</div>
+
+				<div class="param">
+					<input id="mortality" type="number" min="0" max="100" value="10" />
+					<label>Mortality</label>
+				</div>
+
+				<div class="param">
+					<input id="immunity" type="number" min="1" max="100" value="90" />
+					<label>Immunity</label>
+				</div>
+
+				<div class="param">
+					<input id="vaccine" type="number" min="0" max="100" value="90" />
+					<label>Vaccine efficiency</label>
+				</div>
+			</div>
+
+			<div class="params">
+				<div class="param">
+					<input id="speed" type="number" min="1" max="100" value="20" />
+					<label>Agent speed</label>
+				</div>
+
+				<div class="param">
+					<input id="size" type="number" min="1" max="100" value="20" />
+					<label>Agent size</label>
+				</div>
+
+				<div class="param">
+					<input id="days" type="number" min="1" max="100" value="20" />
+					<label>Simulation days</label>
+				</div>
+
+				<div class="param">
+					<input id="real_time" type="checkbox" />
+					<label>Real time simulation</label>
+				</div>
+			</div>
+		</section>
+
+		<section class="bottom">
+			<svg xmlns="http://www.w3.org/2000/svg"></svg>
+		</section>
+	</body>
+</html>
