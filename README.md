@@ -34,7 +34,7 @@ The model is based on the [SIRV model](https://en.wikipedia.org/wiki/Compartment
 
 Here is a short video of the model at 1 day / 1 second:
 
-<video src="./results/model.mp4" width="500px" controls></video>
+<video src="https://github.com/Iconejey/multi-agent/blob/main/Results/model.mp4?raw=true" width="500px" controls></video>
 
 ## Epidemic
 
@@ -47,7 +47,7 @@ The disease is not lethal and the recovery time is between **20** and **30** day
 Here is a graph of the number of <span style="color:#7fa5f8">**susceptible**</span>, <span style="color:#dc6b73">**infected**</span> and <span style="color:#bade87">**recovered**</span> agents during the simulation of 4 years without any sanitary measures:
 
 <p align="center">
-<img src="./results/Number of people as a function of time.jpg"/>
+<img src="https://github.com/Iconejey/multi-agent/blob/main/Results/Number%20of%20people%20as%20a%20function%20of%20time.jpg?raw=true"/>
 </p>
 
 We can see that the number of infected agents peaks at **366** in 2 months. This is more than **1/3** of the population. That means that there is a massive **hospital overload** with **166** people over the limit of **20%** of the population. There is a total of **10** peaks of infected agents during the 4 years and all of them are above this limit.
