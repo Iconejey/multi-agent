@@ -6,7 +6,9 @@ customElements.define(
 
 			this.div = document.createElement('div');
 			this.appendChild(this.div);
-			this.sick_end_time = time + params.infection_time * Math.random() * 1000;
+			this.sick_end_time = 0;
+			this.immune_end_time = 0;
+			this.vaccine_end_time = 0;
 
 			// Position
 			this.x = (Math.random() * game_div.clientWidth) / 16;
@@ -29,13 +31,16 @@ customElements.define(
 			this.div.style.height = this.size + 'em';
 
 			this.move(1);
-			if (this.type === 'infected') this.getSick();
+			if (this.type === 'infected') this.getInfected();
+			if (this.type === 'immune') this.getImmune();
 		}
 
 		move(dt) {
+			const speed = params.speed * lock_down_levels[lock_down_level];
+
 			// Movement
 			if (this.tv <= time) {
-				this.tv = time + Math.random() * params.speed * 2;
+				this.tv = time + Math.random() * speed * 2;
 				this.v *= 0.9999;
 				this.v += (Math.random() - 0.5) / 50;
 				this.v = Math.min(Math.max(this.v, 0.05), 1);
@@ -43,22 +48,22 @@ customElements.define(
 
 			// Rotation
 			if (this.tr <= time) {
-				this.tr = time + Math.random() * params.speed * 2;
+				this.tr = time + Math.random() * speed * 2;
 				this.r *= 0.95;
 				this.r += (Math.random() - 0.5) / 10;
 				this.r = Math.min(Math.max(this.r, -5.0), 0.5);
 			}
 
 			// Get movement vector
-			const dx = (Math.cos(this.o) * this.v * dt * params.speed) / 1000;
-			const dy = (Math.sin(this.o) * this.v * dt * params.speed) / 1000;
+			const dx = (Math.cos(this.o) * this.v * dt * speed) / 1000;
+			const dy = (Math.sin(this.o) * this.v * dt * speed) / 1000;
 
 			// Apply movement
 			this.x += dx;
 			this.y += dy;
 
 			// Apply rotation
-			this.o += (this.r * params.speed * dt) / 1000;
+			this.o += (this.r * speed * dt) / 1000;
 
 			const border = this.size / 2;
 			const border2 = game_div.clientWidth / 16 - border;
@@ -102,8 +107,6 @@ customElements.define(
 
 		vulnerable(dt) {
 			let contamination = params.contamination / 100;
-
-			if (this.type === 'cured') contamination *= 1 - params.immunity / 100;
 			if (this.type === 'vaccinated') contamination *= 1 - params.vaccine / 100;
 
 			return Math.random() < (contamination * dt) / 1000;
@@ -125,26 +128,50 @@ customElements.define(
 			return false;
 		}
 
-		getSick() {
-			this.sick_end_time = time + params.infection_time * Math.random() * 1000;
+		getInfected() {
+			const margin = (params.infection_time_2 - params.infection_time_1) * Math.random();
+			const days = params.infection_time_1 + margin;
+			this.sick_end_time = time + days * 1000;
 		}
 
 		sickness() {
 			if (time > this.sick_end_time) {
-				// Die
-				if (Math.random() < params.mortality / 100) this.type = 'dead';
-				// Cure
-				else this.type = 'cured';
+				this.type = 'immune';
 			}
+		}
 
-			return this.type;
+		getImmune() {
+			const margin = (params.immunity_time_2 - params.immunity_time_1) * Math.random();
+			const days = params.immunity_time_1 + margin;
+			this.immune_end_time = time + days * 1000;
+		}
+
+		immunity() {
+			if (time > this.immune_end_time) this.type = 'healthy';
+		}
+
+		getVacined() {
+			const margin = (params.vaccine_time_2 - params.vaccine_time_1) * Math.random();
+			const days = params.vaccine_time_1 + margin;
+			this.vaccine_end_time = time + days * 1000;
+		}
+
+		vaccinable(dt) {
+			const vaccine_start_time = params.vaccine_date * 1000;
+			return time >= vaccine_start_time && Math.random() < (params.vaccination_rate / 100) * (dt / 7000);
+		}
+
+		vaccine() {
+			if (time > this.vaccine_end_time) this.type = 'healthy';
 		}
 
 		// Type attribute
 		set type(val) {
 			this.setAttribute('type', val);
 
-			if (val === 'infected') this.getSick();
+			if (val === 'infected') this.getInfected();
+			if (val === 'immune') this.getImmune();
+			if (val === 'vaccinated') this.getVacined();
 		}
 
 		get type() {

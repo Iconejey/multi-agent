@@ -2,6 +2,8 @@ const str_tag = (strs, ...vals) => strs.reduce((final, str, i) => final + vals[i
 const html = str_tag;
 const css = str_tag;
 
+let title = 'Number of people as a function of time';
+
 function getLocal(key) {
 	return localStorage.getItem(key);
 }
@@ -20,21 +22,36 @@ function updateFPS(dt) {
 	} else fps_span.innerText = '';
 }
 
+// Params
 const params = {};
 
 // Data
 const data = {
 	healthy: { agents: [], num: [] },
-	infected: { agents: [], num: [] },
+	immune: { agents: [], num: [] },
 	// vaccinated: { agents: [], num: [] },
-	cured: { agents: [], num: [] }
-	// dead: { agents: [], num: [] }
+	infected: { agents: [], num: [] },
+	lock_down: { num: [] }
+};
+
+// Lock down levels:
+const lock_down_levels = {
+	0: 1,
+	1: 0.25,
+	2: 0.1
 };
 
 const svg = document.querySelector('svg');
 
 function initGraph() {
+	max_infected = 0;
+	max_infect_rate = 0;
+
 	num_length_limit = params.days / num_update_interval;
+
+	// Remove rects
+	const rects = document.querySelectorAll(`svg > rect`);
+	for (const rect of rects) rect.remove();
 
 	for (const type in data) {
 		const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -55,34 +72,201 @@ function drawGraph() {
 		}
 	}
 
-	// Borders
-	const border_width = 4;
+	// Remove old rects, texts and lines from graph
+	const rects = document.querySelectorAll('rect, text, line');
+	for (const rect of rects) rect.remove();
 
-	const w = svg.clientWidth - border_width * 2;
-	const h = svg.clientHeight - border_width * 2;
+	let side_border_width = 20;
+	let top_border_width = 20;
+	let bottom_border_width = 20;
 
-	let population = 0;
-	let max = 0;
+	let graph_width = svg.clientWidth - side_border_width * 2;
+	let graph_height = svg.clientHeight - bottom_border_width - top_border_width;
 
-	// Get max num and population
-	for (const type in data) {
-		max = Math.max(max, ...data[type].num);
-		population += data[type].agents.length;
-	}
+	if (!document.body.classList.contains('show-params')) {
+		side_border_width = 300;
+		top_border_width = 200;
+		bottom_border_width = 200;
 
-	for (const type in data) {
-		const path = document.querySelector(`path#${type}`);
-		const nums = data[type].num;
-		let d = '';
+		graph_width = svg.clientWidth - side_border_width * 2;
+		graph_height = svg.clientHeight - bottom_border_width - top_border_width;
 
-		for (const i in nums) {
-			const x = (w * i) / (num_length_crop - 1) + border_width;
-			const y = h - (h * nums[i]) / max + border_width;
+		const axes_padding = 50;
 
-			d += `${i > 0 ? 'L' : 'M'} ${x} ${y} `;
+		// Draw axes rect
+		{
+			const axes_rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+			axes_rect.id = 'axes';
+			axes_rect.setAttribute('x', side_border_width - axes_padding);
+			axes_rect.setAttribute('y', top_border_width - axes_padding);
+			axes_rect.setAttribute('width', graph_width + axes_padding * 2);
+			axes_rect.setAttribute('height', graph_height + axes_padding * 2);
+
+			svg.prepend(axes_rect);
 		}
 
-		path.setAttribute('d', d);
+		// Draw step lines
+		{
+			// X axis with 4 steps by 0.5
+			for (let i = 0; i <= 8; i++) {
+				const step = i / 8;
+
+				// Line
+				const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+				const x1 = side_border_width + step * graph_width;
+				const y1 = top_border_width + graph_height + axes_padding;
+				const x2 = x1;
+				const y2 = y1 + 20;
+
+				line.setAttribute('x1', x1);
+				line.setAttribute('y1', y1);
+				line.setAttribute('x2', x2);
+				line.setAttribute('y2', y2);
+
+				svg.appendChild(line);
+
+				// Text
+				const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+				text.setAttribute('x', x1);
+				text.setAttribute('y', y2 + 40);
+				text.setAttribute('text-anchor', 'middle');
+				text.innerHTML = i / 2;
+
+				svg.appendChild(text);
+			}
+
+			// Y axis with 5 steps by 200
+			for (let i = 0; i <= 5; i++) {
+				const step = i / 5;
+
+				// Line
+				const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+				const x1 = side_border_width - axes_padding;
+				const y1 = top_border_width + graph_height - step * graph_height;
+				const x2 = x1 - 20;
+				const y2 = y1;
+
+				line.setAttribute('x1', x1);
+				line.setAttribute('y1', y1);
+				line.setAttribute('x2', x2);
+				line.setAttribute('y2', y2);
+
+				svg.appendChild(line);
+
+				// Text
+				const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+				text.setAttribute('x', x2 - 20);
+				text.setAttribute('y', y1 + 10);
+				text.setAttribute('text-anchor', 'end');
+				text.innerHTML = i * 200;
+
+				svg.appendChild(text);
+			}
+		}
+
+		// Labels
+		{
+			// X axis label
+			const label_x = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+			label_x.setAttribute('x', side_border_width + graph_width / 2);
+			label_x.setAttribute('y', top_border_width + graph_height + axes_padding + 110);
+
+			label_x.setAttribute('text-anchor', 'middle');
+			label_x.innerHTML = 'Years';
+
+			svg.appendChild(label_x);
+
+			// Y axis label
+
+			const label_y = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+			label_y.setAttribute('y', side_border_width - axes_padding - 145);
+			label_y.setAttribute('x', -(top_border_width + graph_height / 2));
+
+			label_y.setAttribute('text-anchor', 'middle');
+			label_y.setAttribute('transform', 'rotate(-90)');
+			label_y.innerHTML = 'Number of people';
+
+			svg.appendChild(label_y);
+		}
+
+		// Title
+		{
+			const title_text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+			title_text.id = 'title';
+
+			title_text.setAttribute('x', side_border_width + graph_width / 2);
+			title_text.setAttribute('y', side_border_width - axes_padding - 140);
+
+			title_text.setAttribute('text-anchor', 'middle');
+			title_text.innerHTML = title;
+
+			svg.appendChild(title_text);
+		}
+	}
+
+	let max = 1000;
+
+	for (const type in data) {
+		const nums = data[type].num;
+
+		// Lock down
+		if (type === 'lock_down') {
+			if (params.lock_down) {
+				// Draw lock down limits
+				{
+					const limits_rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+					limits_rect.setAttribute('x', side_border_width);
+					limits_rect.setAttribute('y', top_border_width + graph_height - (150 / max) * graph_height);
+					limits_rect.setAttribute('width', graph_width);
+					limits_rect.setAttribute('height', (50 / max) * graph_height);
+
+					svg.prepend(limits_rect);
+				}
+
+				// Add new rects to graph
+				let i = 0;
+				while (i < nums.length) {
+					const n = nums[i];
+
+					if (n) {
+						let rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+
+						rect.setAttribute('x', side_border_width + (graph_width * i) / (num_length_crop - 1));
+						rect.setAttribute('y', top_border_width);
+						rect.setAttribute('height', graph_height);
+
+						let rect_w = 0;
+
+						while (i < nums.length && nums[++i]) rect_w++;
+
+						rect_w = (graph_width * rect_w) / num_length_crop;
+
+						rect.setAttribute('width', rect_w < 0 ? 0 : rect_w);
+
+						svg.prepend(rect);
+					}
+
+					i++;
+				}
+			}
+		}
+
+		// Agents
+		else {
+			const path = document.querySelector(`path#${type}`);
+			let d = '';
+
+			for (const i in nums) {
+				const x = (graph_width * i) / (num_length_crop - 1) + side_border_width;
+				const y = top_border_width + graph_height - (graph_height * nums[i]) / max;
+
+				d += `${i > 0 ? 'L' : 'M'} ${x} ${y} `;
+			}
+
+			path.setAttribute('d', d);
+		}
 	}
 }
 
@@ -130,8 +314,20 @@ function updateGraph() {
 		num_update_time += num_update_interval * 1000;
 
 		for (const type in data) {
-			data[type].num.push(data[type].agents.length);
+			const num_val = type === 'lock_down' ? lock_down_level : data[type].agents.length;
+			data[type].num.push(num_val);
 		}
+
+		const last_infected_num = data.infected.agents.length;
+		max_infected = Math.max(max_infected, last_infected_num);
+
+		if (data.infected.num.length > 1) {
+			const previous_infected_num = data.infected.num[data.infected.num.length - 2];
+			infected_rate = (last_infected_num - previous_infected_num) / num_update_interval;
+			max_infect_rate = Math.max(max_infect_rate, infected_rate);
+		}
+
+		max_infected = Math.max(max_infected, ...data.infected.num.slice(-1));
 
 		drawGraph();
 	}
@@ -145,14 +341,40 @@ function updateAgents() {
 	}
 }
 
+function getIndexFromDays(days) {
+	return Math.floor(days / num_update_interval);
+}
+
+function getIndexFromYears(years) {
+	return getIndexFromDays(years * 365);
+}
+
+function getDataFromDays(type, start, end) {
+	// Interval
+	if (end) {
+		const start_index = getIndexFromDays(start);
+		const end_index = getIndexFromDays(end);
+
+		return data[type].num.slice(start_index, end_index);
+	}
+
+	// Single value
+	else return data[type].num[getIndexFromDays(start)];
+}
+
+function getDataFromYears(type, start, end) {
+	return getDataFromDays(type, start * 365, end ? end * 365 : undefined);
+}
+
 // Draw graph again on window resize
 window.onresize = drawGraph;
 
-const num_update_interval = 1;
+const num_update_interval = 4;
 
 const default_dt = 32;
-const ticks_per_loop = 100;
-const log_interval = 1;
+const ticks_per_loop = 200;
+
+const lock_down_min_duration = 14;
 
 let log_time = 0;
 let start_time = 0;
@@ -163,6 +385,15 @@ let num_length_crop = 0;
 
 let stop_loop = false;
 let crop_graph = false;
+
+let infected_rate = 0;
+let max_infect_rate = 0;
+let max_infected = 0;
+let total_infected = 0;
+
+let lock_down_level = 0;
+let lock_down_start = 0;
+let lock_down_end = 0;
 
 // Get params from localStorage and set them to inputs
 for (const input of document.querySelectorAll('input')) {
@@ -201,8 +432,6 @@ document.querySelector('a#start.btn').onclick = async e => {
 	e.preventDefault();
 	// console.clear();
 
-	document.body.classList.add('running');
-
 	stop_loop = true;
 	crop_graph = false;
 
@@ -221,8 +450,10 @@ document.querySelector('a#start.btn').onclick = async e => {
 		let game_html = '';
 
 		for (const type in data) {
-			for (let i = 0; i < params[type]; i++) {
-				game_html += html`<agent-elem type="${type}"></agent-elem>`;
+			if (type !== 'lock_down') {
+				for (let i = 0; i < params[type]; i++) {
+					game_html += html`<agent-elem type="${type}"></agent-elem>`;
+				}
 			}
 		}
 
@@ -230,10 +461,17 @@ document.querySelector('a#start.btn').onclick = async e => {
 
 		initGraph();
 		num_length_crop = num_length_limit;
+		lock_down_level = 0;
+		infected_rate = 0;
+		total_infected = 0;
 
 		// Start loop
 		requestAnimationFrame(loop);
 	}, 500);
+
+	setTimeout(() => {
+		document.body.classList.add('running');
+	}, 1000);
 };
 
 // Stop btn click
@@ -264,6 +502,31 @@ document.querySelector('a#keep.btn').onclick = e => {
 document.querySelector('a#crop.btn').onclick = e => {
 	e.preventDefault();
 	cropData();
+};
+
+// Reset params btn click
+document.querySelector('a#reset.btn').onclick = e => {
+	e.preventDefault();
+
+	// Get all keys from localStorage
+	const keys = Object.keys(localStorage);
+
+	// Remove all keys
+	for (const key of keys) {
+		localStorage.removeItem(key);
+	}
+
+	// Reload page
+	location.reload();
+};
+
+document.querySelector('section.bottom').onclick = e => {
+	e.preventDefault();
+	if (!document.body.classList.toggle('show-params')) {
+		drawGraph('coucou');
+	} else {
+		drawGraph();
+	}
 };
 
 let time = 0;
@@ -318,23 +581,55 @@ async function loop(t) {
 function tick(dt) {
 	updateFPS(dt);
 
+	// Lock down
+	if (!lock_down_level && data.infected.agents.length > 150) {
+		lock_down_level = params.lock_down;
+		lock_down_start = time;
+	} else {
+		const can_end = time >= lock_down_start + lock_down_min_duration * 1000;
+
+		if (can_end && data.infected.agents.length <= 100) {
+			lock_down_level = 0;
+			lock_down_start = time;
+		}
+	}
+
 	// Upadate data
 	for (const type in data) {
 		data[type].agents = game_div.querySelectorAll(`agent-elem[type="${type}"]`);
 	}
 
-	for (const type of ['healthy', 'cured', 'vaccinated']) {
-		for (const agent of data[type].agents) {
-			agent.move(dt);
+	for (const type of ['healthy', 'vaccinated']) {
+		if (data[type]) {
+			for (const agent of data[type].agents) {
+				agent.move(dt);
 
-			if (data.infected.agents.length && agent.vulnerable(dt) && agent.contact(data.infected.agents)) {
-				agent.type = 'infected';
+				// Infection of healthy and vaccinated agents
+				if (data.infected.agents.length && agent.vulnerable(dt) && agent.contact(data.infected.agents)) {
+					agent.type = 'infected';
+					total_infected++;
+				}
+
+				// // Vaccination of healthy agents
+				else if (type === 'healthy' && agent.vaccinable(dt)) {
+					agent.type = 'vaccinated';
+				}
+
+				// Effects of vaccine
+				else if (type === 'vaccinated') agent.vaccine();
 			}
 		}
 	}
 
+	for (const agent of data.immune.agents) {
+		agent.move(dt);
+		agent.immunity();
+	}
+
 	for (const agent of data.infected.agents) {
 		agent.move(dt);
+
+		// Effects of infection
 		agent.sickness(dt);
 	}
 

@@ -11,7 +11,7 @@
 		<script src="./src/agent.js" defer async></script>
 		<script src="./src/main.js" defer async></script>
 	</head>
-	<body>
+	<body class="show-params">
 		<section class="top">
 			<span id="fps"></span>
 
@@ -19,23 +19,23 @@
 
 			<div class="params">
 				<div class="param color-healthy">
-					<input id="healthy" type="number" min="0" value="100" />
+					<input id="healthy" type="number" min="0" value="990" />
 					<label>Healthy</label>
 				</div>
 
 				<div class="param color-infected">
-					<input id="infected" type="number" min="0" value="2" />
+					<input id="infected" type="number" min="0" value="10" />
 					<label>Infected</label>
 				</div>
 
 				<div class="param color-vaccinated">
-					<input id="vaccinated" type="number" min="0" value="100" />
+					<input id="vaccinated" type="number" min="0" value="0" />
 					<label>Vaccinated</label>
 				</div>
 
-				<div class="param color-cured">
-					<input id="cured" type="number" min="0" value="0" />
-					<label>Cured</label>
+				<div class="param color-immune">
+					<input id="Immune" type="number" min="0" value="0" />
+					<label>Immune</label>
 				</div>
 
 				<div class="param color-dead">
@@ -51,44 +51,62 @@
 
 			<div class="params">
 				<div class="param">
-					<input id="contamination" type="number" min="0" max="100" value="50" />
+					<input id="contamination" type="number" min="0" max="100" value="8" />
 					<label>Contamination</label>
 				</div>
 
 				<div class="param">
-					<input id="infection_time" type="number" min="1" max="100" value="20" />
+					<input id="infection_time_1" type="number" min="1" value="20" />
+					<input id="infection_time_2" type="number" min="1" value="30" />
 					<label>Infected time</label>
 				</div>
 
 				<div class="param">
-					<input id="mortality" type="number" min="0" max="100" value="10" />
-					<label>Mortality</label>
+					<input id="immunity_time_1" type="number" min="1" value="60" />
+					<input id="immunity_time_2" type="number" min="1" value="90" />
+					<label>Immunity time</label>
 				</div>
 
 				<div class="param">
-					<input id="immunity" type="number" min="1" max="100" value="90" />
-					<label>Immunity</label>
+					<input id="vaccine_time_1" type="number" min="1" value="120" />
+					<input id="vaccine_time_2" type="number" min="1" value="180" />
+					<label>Vaccine time</label>
+				</div>
+
+				<div class="param">
+					<input id="vaccine_date" type="number" min="0" value="182" />
+					<label>Vaccine disponibility date</label>
 				</div>
 
 				<div class="param">
 					<input id="vaccine" type="number" min="0" max="100" value="90" />
 					<label>Vaccine efficiency</label>
 				</div>
+
+				<div class="param">
+					<input id="vaccination_rate" type="number" min="0" max="100" value="0" />
+					<label>Vaccination rate</label>
+				</div>
+
+				<div class="param">
+					<input id="lock_down" type="number" min="0" max="2" value="0" />
+					<label>Lock down</label>
+				</div>
 			</div>
 
 			<div class="params">
 				<div class="param">
-					<input id="speed" type="number" min="1" max="100" value="20" />
+					<input id="speed" type="number" min="1" max="100" value="10" />
 					<label>Agent speed</label>
 				</div>
 
 				<div class="param">
-					<input id="size" type="number" min="1" max="100" value="20" />
+					<input id="size" type="number" min="1" max="100" value="40" />
 					<label>Agent size</label>
 				</div>
 
 				<div class="param">
-					<input id="days" type="number" min="1" max="100" value="20" />
+					<input id="days" type="number" min="1" max="100" value="1460" />
 					<label>Simulation days</label>
 				</div>
 
@@ -96,6 +114,8 @@
 					<input id="real_time" type="checkbox" />
 					<label>Real time simulation</label>
 				</div>
+
+				<a id="reset" class="btn" tabindex="3">Reset</a>
 			</div>
 		</section>
 
