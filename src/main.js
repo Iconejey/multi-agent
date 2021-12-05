@@ -29,7 +29,7 @@ const params = {};
 const data = {
 	healthy: { agents: [], num: [] },
 	immune: { agents: [], num: [] },
-	// vaccinated: { agents: [], num: [] },
+	vaccinated: { agents: [], num: [] },
 	infected: { agents: [], num: [] },
 	lock_down: { num: [] }
 };
